@@ -2,7 +2,7 @@ plugins {
     id("java")
 }
 
-group = "org.phonepe_customer_support"
+group = "org.lld"
 version = "1.0-SNAPSHOT"
 
 repositories {

@@ -1,2 +1,2 @@
-rootProject.name = "low-level-designs"
+rootProject.name = "low_level_design_prep"
 

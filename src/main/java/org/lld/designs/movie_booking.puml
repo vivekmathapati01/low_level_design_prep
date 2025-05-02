@@ -1,0 +1,182 @@
+@startuml
+'https://plantuml.com/salt
+
+Abstract User {
+    - userId
+    - name
+    - email
+    - phone
+}
+
+class Admin {
+    + addShow()
+    + updateShow()
+    + deleteShow()
+    + addMovie()
+    + deleteMovie()
+}
+
+class Customer {
+    - bookings: List<Bookings>
+    + createBooking()
+    + updateBooking
+}
+
+class TicketAgent {
+    + createBookings()
+}
+
+User <|-- Admin : Extends
+User <|-- Customer : Extends
+User <|-- TicketAgent : Extends
+
+class Cinema {
+    - cinemaId
+    - name
+    - city
+    - address: Address
+    - screens: List<Screen>
+    + addScreens()
+    + updateScreen()
+}
+
+class Show {
+    - showId
+    - startTime
+    - endTime / duration
+    + getShowTime()
+}
+
+class Screen {
+    - screenId:
+    - name:
+    - seatArrangementId
+    - shows: List<Shows>
+    + addShow()
+    + deleteShow()
+}
+
+class SeatArrangement {
+    - seatArrangementId
+    - screenId
+    - rows: List<SeatRow>
+    + getSeatArrangement()
+}
+
+class SeatRow {
+    - seatRowId
+    - rowCapacity
+    - seriesId: A/B/C
+    - seats: List<Seat>
+    - seatsCategory: SeatsCategory
+    - basePrice: Double
+    + addSeat(seatId)
+    + deleteSeat(seatId)
+}
+
+abstract Seat {
+    seatId:
+    seatNum:
+    seatStatus: SeatStatus
+    + isAvailable()
+}
+
+enum SeatStatus {
+    - AVAILABLE
+    - RESERVED
+    - PENDING
+}
+
+enum SeatsCategory {
+    - PLATINUM
+    - GOLD
+    - SILVER
+}
+
+class Movie {
+    - movieId
+    - tittle
+    - language
+    - duration
+    - releaseDate
+    - genre
+    - shows: List<Shows>
+    + getShows()
+}
+
+class Booking {
+    - bookingId:
+    - amount
+    - status: confirmed/pending payment
+    - showId
+    - tickets: list<Ticket>
+}
+
+class Ticket {
+    ticketId
+    seat: Seat
+    movie: Movie
+}
+
+interface Payment {
+    + makePayment()
+}
+
+class CreditCardPayment {
+    - transactionId
+    - nameOnCard
+    - cardNumber
+    - expiryDate
+    - cvv
+    - amount
+    + makePayment(amount)
+}
+
+class UPI {
+    - transactionId
+    - upiId
+    - phoneNumber
+    - amount
+    + makePayment(amount)
+}
+
+Payment <|-- CreditCardPayment
+Payment <|-- UPI
+
+
+interface Notification {
+    + notify(userId, message)
+}
+
+class SmsNotification {
+}
+
+class emailNotification {
+}
+
+class PushNotification {
+}
+
+Notification <|.. SmsNotification
+Notification <|.. emailNotification
+Notification <|.. PushNotification
+
+
+Admin --> Movie
+Admin --> Show
+Customer --> Booking
+
+Cinema --> Screen
+Screen --> SeatArrangement
+SeatArrangement --> SeatRow
+SeatRow --> Seat
+
+Booking --> Show
+Show --> Ticket
+Ticket --> Movie
+Show --> Cinema
+
+Booking --> Payment
+Booking --> Notification
+
+@enduml
