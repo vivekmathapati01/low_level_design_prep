@@ -1,0 +1,342 @@
+Requirements
+1. user management
+2. user be able to create events
+    1. recurrence (daily, weekly, monthly)
+    2. participants list
+    2. remider : before (15 min )
+    3. notification to the user
+3. Participants
+    1. RSVP : Accept / Reject / Tentative
+    2. sugest new Time (future scope)
+
+Contracts :
+
+POST /api/event
+{
+    titile:
+    description:
+    location:
+    gyhb h
+}
+
+GET /domain/v1/event/{eventId}
+put /domain/v1/event/{eventId}
+patch /domain/v1/event/{eventId} {status: accept}
+delete /domain/v1/event/{eventId} (cancel)
+
+calender
+GET /domain/v1/calendar?view=daily&startDate=
+
+
+
+@startuml Calendar Application Class Diagram
+
+' Core domain models
+package "Domain Models" {
+  class User {
+    -String userId
+    -String name
+    -String email
+    -TimeZone preferredTimeZone
+    -Map<String, Boolean> notificationPreferences
+    +void updatePreferences()
+  }
+
+  class Event {
+    -String eventId
+    -String title
+    -String description
+    -DateTime startTime
+    -DateTime endTime
+    -Location location
+    -User owner
+    -List<User> participants
+    -RecurrencePattern recurrencePattern
+    -List<Reminder> reminders
+    -EventCategory category
+    +boolean isInRange(DateTime start, DateTime end)
+    +boolean hasTimeConflict(Event other)
+  }
+
+  class Calendar {
+    -String calendarId
+    -String name
+    -User owner
+    -List<Event> events
+    -Map<String, EventCategory> categories
+    -boolean isPublic
+    +void addEvent(Event event)
+    +List<Event> getEventsForDateRange(DateTime start, DateTime end)
+    +void removeEvent(String eventId)
+    +void updateEvent(Event event)
+  }
+
+  class Location {
+    -String address
+    -double latitude
+    -double longitude
+    -String placeId
+    +String getFormattedAddress()
+  }
+
+  enum EventCategory {
+    WORK
+    PERSONAL
+    FAMILY
+    MEETING
+    HOLIDAY
+    OTHER
+  }
+
+  enum RecurrenceType {
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
+    CUSTOM
+  }
+
+  class RecurrencePattern {
+    -RecurrenceType type
+    -int interval
+    -DateTime endDate
+    -List<DayOfWeek> daysOfWeek
+    +List<DateTime> generateOccurrences(DateTime rangeStart, DateTime rangeEnd)
+  }
+
+  class Reminder {
+    -int minutesBefore
+    -NotificationType type
+  }
+
+  enum NotificationType {
+    EMAIL
+    SMS
+    PUSH
+    NONE
+  }
+}
+
+' Observer Pattern
+package "Observer Pattern" {
+  interface Subject {
+    +void registerObserver(Observer observer)
+    +void removeObserver(Observer observer)
+    +void notifyObservers()
+  }
+
+  interface Observer {
+    +void update(Event event)
+  }
+
+  class EmailNotifier {
+    +void update(Event event)
+  }
+
+  class PushNotificationService {
+    +void update(Event event)
+  }
+
+  Event ..|> Subject
+  EmailNotifier ..|> Observer
+  PushNotificationService ..|> Observer
+  Subject --> Observer : notifies >
+}
+
+' Factory Pattern
+package "Factory Pattern" {
+  abstract class CalendarView {
+    #DateTime focusDate
+    #User viewer
+    +{abstract} List<Event> renderEvents()
+    +{abstract} String getViewName()
+  }
+
+  class DayView {
+    +List<Event> renderEvents()
+    +String getViewName()
+  }
+
+  class WeekView {
+    +List<Event> renderEvents()
+    +String getViewName()
+  }
+
+  class MonthView {
+    +List<Event> renderEvents()
+    +String getViewName()
+  }
+
+  class YearView {
+    +List<Event> renderEvents()
+    +String getViewName()
+  }
+
+  class CalendarViewFactory {
+    +{static} CalendarView createView(ViewType type, DateTime focusDate, User viewer)
+  }
+
+  enum ViewType {
+    DAY
+    WEEK
+    MONTH
+    YEAR
+  }
+
+  CalendarView <|-- DayView
+  CalendarView <|-- WeekView
+  CalendarView <|-- MonthView
+  CalendarView <|-- YearView
+  CalendarViewFactory ..> CalendarView : creates >
+  CalendarViewFactory --> ViewType : uses >
+}
+
+' Strategy Pattern
+package "Strategy Pattern" {
+  interface NotificationStrategy {
+    +void sendNotification(User user, Event event, String message)
+  }
+
+  class EmailNotificationStrategy {
+    +void sendNotification(User user, Event event, String message)
+  }
+
+  class SMSNotificationStrategy {
+    +void sendNotification(User user, Event event, String message)
+  }
+
+  class PushNotificationStrategy {
+    +void sendNotification(User user, Event event, String message)
+  }
+
+  class NotificationService {
+    -Map<NotificationType, NotificationStrategy> strategies
+    +void sendNotification(User user, Event event, NotificationType type, String message)
+  }
+
+  NotificationStrategy <|.. EmailNotificationStrategy
+  NotificationStrategy <|.. SMSNotificationStrategy
+  NotificationStrategy <|.. PushNotificationStrategy
+  NotificationService o--> NotificationStrategy : uses >
+}
+
+' Composite Pattern
+package "Composite Pattern" {
+  abstract class CalendarItem {
+    #String id
+    #String title
+    +{abstract} List<Event> getEventsInRange(DateTime start, DateTime end)
+  }
+
+  class SingleEvent {
+    -DateTime startTime
+    -DateTime endTime
+    +List<Event> getEventsInRange(DateTime start, DateTime end)
+    -Event createEventInstance()
+  }
+
+  class RecurringEvent {
+    -List<CalendarItem> eventInstances
+    -RecurrencePattern recurrencePattern
+    -DateTime seriesStartTime
+    -DateTime seriesEndTime
+    +List<Event> getEventsInRange(DateTime start, DateTime end)
+    -SingleEvent createEventInstance(DateTime occurrence)
+  }
+
+  CalendarItem <|-- SingleEvent
+  CalendarItem <|-- RecurringEvent
+  RecurringEvent o--> CalendarItem : contains >
+  RecurringEvent --> RecurrencePattern : uses >
+}
+
+' Command Pattern
+package "Command Pattern" {
+  interface CalendarCommand {
+    +void execute()
+    +void undo()
+  }
+
+  class AddEventCommand {
+    -Calendar calendar
+    -Event event
+    +void execute()
+    +void undo()
+  }
+
+  class UpdateEventCommand {
+    -Calendar calendar
+    -Event newEvent
+    -Event oldEvent
+    +void execute()
+    +void undo()
+  }
+
+  class RemoveEventCommand {
+    -Calendar calendar
+    -Event event
+    +void execute()
+    +void undo()
+  }
+
+  class CalendarCommandManager {
+    -Stack<CalendarCommand> undoStack
+    -Stack<CalendarCommand> redoStack
+    +void executeCommand(CalendarCommand command)
+    +void undo()
+    +void redo()
+  }
+
+  CalendarCommand <|.. AddEventCommand
+  CalendarCommand <|.. UpdateEventCommand
+  CalendarCommand <|.. RemoveEventCommand
+  CalendarCommandManager o--> CalendarCommand : manages >
+  AddEventCommand --> Calendar : modifies >
+  UpdateEventCommand --> Calendar : modifies >
+  RemoveEventCommand --> Calendar : modifies >
+}
+
+' Services
+package "Services" {
+  class NotificationDispatcher <<Singleton>> {
+    -static NotificationDispatcher instance
+    -ExecutorService executorService
+    +static NotificationDispatcher getInstance()
+    +void dispatchNotification(User user, Event event, NotificationType type)
+  }
+
+  class CalendarService {
+    +void createCalendar(User owner, String name)
+    +void shareCalendar(Calendar calendar, User user, PermissionLevel level)
+    +List<Calendar> getUserCalendars(User user)
+  }
+
+  class EventService {
+    +Event createEvent(Calendar calendar, EventRequest request)
+    +void updateEvent(String eventId, EventRequest request)
+    +void deleteEvent(String eventId, boolean notifyParticipants)
+    +List<Event> searchEvents(SearchCriteria criteria)
+  }
+
+  enum PermissionLevel {
+    READ
+    WRITE
+    ADMIN
+  }
+
+  CalendarService --> Calendar : manages >
+  EventService --> Event : manages >
+  NotificationDispatcher ..> NotificationService : uses >
+}
+
+' Relationships between different packages
+User "1" *-- "many" Calendar : owns >
+Calendar "1" *-- "many" Event : contains >
+Event "*" -- "1" User : owned by >
+Event "*" -- "*" User : has participants >
+Event --> RecurrencePattern : may have >
+Event "*" -- "*" Reminder : has >
+Calendar --> CalendarService : managed by >
+Event --> EventService : managed by >
+
+@enduml

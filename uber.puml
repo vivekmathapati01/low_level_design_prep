@@ -1,0 +1,292 @@
+@startuml
+package "User Management" {
+  class User {
+    -userId: String
+    -name: String
+    -email: String
+    -phone: String
+    -password: String
+    -createdAt: Date
+    -updatedAt: Date
+    +register(): boolean
+    +login(): AuthToken
+    +updateProfile(): boolean
+  }
+
+  class Rider {
+    -paymentMethods: List<PaymentMethod>
+    -rideHistory: List<Ride>
+    +requestRide(source: Location, destination: Location): Ride
+    +cancelRide(rideId: String): boolean
+    +getRideHistory(): List<Ride>
+    +addPaymentMethod(paymentDetails: PaymentDetails): boolean
+  }
+
+  class Driver {
+    -driverId: String
+    -licenseNumber: String
+    -vehicleDetails: Vehicle
+    -isVerified: boolean
+    -averageRating: float
+    -currentLocation: Location
+    -isAvailable: boolean
+    -activeRide: Ride
+    -completedRides: List<Ride>
+    +updateAvailability(status: boolean): boolean
+    +updateLocation(location: Location): boolean
+    +acceptRide(rideId: String): boolean
+    +startRide(rideId: String): boolean
+    +completeRide(rideId: String): boolean
+    +getEarnings(timeRange: TimeRange): EarningsSummary
+  }
+
+  class Vehicle {
+    -vehicleId: String
+    -registrationNumber: String
+    -make: String
+    -model: String
+    -year: int
+    -color: String
+    -type: VehicleType
+    -capacity: int
+  }
+
+  enum VehicleType {
+    ECONOMY
+    PREMIUM
+    SUV
+    XL
+  }
+
+  User <|-- Rider
+  User <|-- Driver
+  Driver "1" -- "1" Vehicle
+}
+
+package "Ride Management" {
+  class Ride {
+    -rideId: String
+    -rider: Rider
+    -driver: Driver
+    -source: Location
+    -destination: Location
+    -waypoints: List<Location>
+    -requestTime: Date
+    -startTime: Date
+    -endTime: Date
+    -status: RideStatus
+    -estimatedFare: Money
+    -actualFare: Money
+    -route: Route
+    -paymentInfo: Payment
+    -feedback: Feedback
+    +calculateFare(): Money
+    +updateStatus(status: RideStatus): boolean
+    +trackLocation(): Location
+    +addWaypoint(location: Location): boolean
+  }
+
+  enum RideStatus {
+    REQUESTED
+    DRIVER_ASSIGNED
+    DRIVER_ARRIVED
+    STARTED
+    COMPLETED
+    CANCELED
+  }
+
+  class RideRequest {
+    -requestId: String
+    -rider: Rider
+    -source: Location
+    -destination: Location
+    -vehicleType: VehicleType
+    -requestTime: Date
+    -estimatedFare: Money
+    +matchDriver(): Driver
+    +createRide(): Ride
+    +cancel(): boolean
+  }
+
+  class Feedback {
+    -feedbackId: String
+    -rideId: String
+    -riderRating: int
+    -driverRating: int
+    -riderComment: String
+    -driverComment: String
+    -createdAt: Date
+    +submitRiderFeedback(rating: int, comment: String): boolean
+    +submitDriverFeedback(rating: int, comment: String): boolean
+  }
+
+  class RideMatching {
+    +findNearbyDrivers(location: Location, radius: int): List<Driver>
+    +assignDriver(request: RideRequest): Driver
+    +considerFactors(drivers: List<Driver>, request: RideRequest): Driver
+  }
+
+  Ride "1" o-- "1" RideRequest
+  Ride "1" -- "1" Feedback
+  RideRequest -- RideMatching
+}
+
+package "Location Services" {
+  class Location {
+    -latitude: double
+    -longitude: double
+    -address: String
+    -timestamp: Date
+    +getDistance(location: Location): double
+    +getAddress(): String
+  }
+
+  class Route {
+    -source: Location
+    -destination: Location
+    -waypoints: List<Location>
+    -distance: double
+    -estimatedDuration: int
+    -polyline: String
+    +calculateETA(): int
+    +getDirections(): List<Direction>
+    +updateRoute(currentLocation: Location): Route
+  }
+
+  class Direction {
+    -instruction: String
+    -distance: double
+    -duration: int
+    -maneuver: String
+  }
+
+  class LocationTracker {
+    +updateLocation(userId: String, location: Location): boolean
+    +trackRide(rideId: String): Location
+    +findNearby(location: Location, entityType: String, radius: double): List<Entity>
+  }
+
+  Route "1" -- "*" Direction
+  Route "1" -- "*" Location
+}
+
+package "Payment System" {
+  class Payment {
+    -paymentId: String
+    -rideId: String
+    -amount: Money
+    -method: PaymentMethod
+    -status: PaymentStatus
+    -timestamp: Date
+    +process(): boolean
+    +generateReceipt(): Receipt
+    +refund(): boolean
+  }
+
+  class Money {
+    -amount: double
+    -currency: String
+    +format(): String
+    +convert(targetCurrency: String): Money
+  }
+
+  enum PaymentStatus {
+    PENDING
+    COMPLETED
+    FAILED
+    REFUNDED
+  }
+
+  class PaymentMethod {
+    -id: String
+    -type: PaymentType
+    -details: PaymentDetails
+    -isDefault: boolean
+    +validate(): boolean
+    +charge(amount: Money): boolean
+  }
+
+  enum PaymentType {
+    CREDIT_CARD
+    DEBIT_CARD
+    WALLET
+    CASH
+  }
+
+  class PaymentProcessor {
+    +processPayment(payment: Payment): PaymentStatus
+    +validatePaymentMethod(method: PaymentMethod): boolean
+    +createPaymentIntent(ride: Ride): Payment
+  }
+
+  class Receipt {
+    -receiptId: String
+    -rideId: String
+    -timestamp: Date
+    -items: List<ReceiptItem>
+    -subtotal: Money
+    -discount: Money
+    -tax: Money
+    -total: Money
+    +generate(): String
+    +email(emailAddress: String): boolean
+  }
+
+  class ReceiptItem {
+    -description: String
+    -amount: Money
+  }
+
+  class FareCalculator {
+    +calculateEstimate(source: Location, destination: Location, vehicleType: VehicleType): Money
+    +calculateActualFare(ride: Ride): Money
+    +applyDynamicPricing(baseFare: Money, demand: double, supply: double): Money
+  }
+
+  Payment "1" -- "1" PaymentMethod
+  Payment -- PaymentProcessor
+  Payment "1" -- "1" Receipt
+  Receipt "1" -- "*" ReceiptItem
+  FareCalculator -- Money
+}
+
+package "Notification System" {
+  class Notification {
+    -notificationId: String
+    -userId: String
+    -title: String
+    -message: String
+    -type: NotificationType
+    -timestamp: Date
+    -isRead: boolean
+    +send(): boolean
+    +markAsRead(): boolean
+  }
+
+  enum NotificationType {
+    RIDE_REQUEST
+    DRIVER_ASSIGNED
+    DRIVER_ARRIVED
+    RIDE_STARTED
+    RIDE_COMPLETED
+    PAYMENT_COMPLETED
+    SYSTEM_ALERT
+  }
+
+  class NotificationService {
+    +sendPushNotification(userId: String, notification: Notification): boolean
+    +sendSMS(phoneNumber: String, message: String): boolean
+    +sendEmail(emailAddress: String, subject: String, body: String): boolean
+  }
+
+  Notification -- NotificationType
+  Notification -- NotificationService
+}
+
+' Relationships between packages
+Rider "1" -- "*" Ride
+Driver "1" -- "*" Ride
+Ride "1" -- "1" Payment
+Ride "1" -- "1" Route
+Notification "*" -- "1" User
+@enduml

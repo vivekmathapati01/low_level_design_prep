@@ -1,0 +1,73 @@
+Requirements
+1. user management - user create a account and start using the application
+2. user can post
+    1. photo / video (image)
+    2. with description
+    3. location details
+    4. use hashtags - feature scope
+3. timeline/feed generation
+-----------------------
+ APIs
+
+ POST /v1/post {
+    file: blob
+    description:
+    location: (lat, long)
+ }
+ response : 201
+
+ get /v1/post?offset=79
+ get /v1/timeline
+ {
+    [posts]
+ }
+
+
+@startuml instagram LLD
+
+class user {
+    - userId
+    - email
+    - bio
+    - profilePhoto: urlLink
+    - dob
+    - gender details
+    - preferences
+}
+
+class profileManager {
+    +getProfile()
+    +updateProfile()
+    +deleteProfile()
+    +managePreferences()
+}
+
+class post {
+    - postId
+    - userId
+    - post: urlLink
+    - description
+    - location
+    - createdDateTime
+    - updatedTime
+}
+
+class LikePost {
+    - userId
+    - postId
+    - comment
+    + LikePost(userId, postId)
+}
+
+class CommentPost {
+    - userId
+    - postId
+    - comment
+    + CommentPost()
+}
+
+class timeLineManager {
+    + getTimeLine(userId)
+}
+
+@enduml

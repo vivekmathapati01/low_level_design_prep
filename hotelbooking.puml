@@ -1,0 +1,76 @@
+HotelBooking
+
+1. user
+    1. onboard & manage hotel
+    2. book hotel
+2. Hotel onbording
+    1. hotel name, address(location), aminities, starType(3,4, 5), types of room & counts, availibility, prices, photos
+3. search & view hotel
+    1. hotel name, location
+4. select & book
+5. payment and checkout
+6. notification
+
+out of scope
+--------------
+1. security - authentication and authorisation
+2. cancelations & refunds
+
+
+@startuml
+class user {
+    userId
+    name
+    email
+}
+
+class Hotel {
+    hotelId
+    name
+    description
+    aminityList[]
+    roomType
+}
+
+class Room {
+    roomTypeId
+    hotelId
+    Type <Delux, Standard, Villa>
+    price
+    facilities
+}
+
+class Facilities {
+    wify: true
+    bathtub: true
+    bedType: <king/queen>
+}
+
+class bookingManager {
+    - userId
+    - hotelId
+    - roomId:
+    - unit
+    + generateInvoice()
+    + book()
+    + updateBooking()
+    + cancel()
+}
+
+class invoice {
+    invoiceId
+    otherDetails
+}
+
+interface payment {
+
+}
+
+class CardPayment {
+
+}
+
+
+
+
+@enduml
