@@ -101,7 +101,8 @@ screen: {creenId, name}
 }
 ]
 
-GET /v1/shows/{showId}/seats [
+GET /v1/shows/{showId}/seats 
+[
 {
 seatId
 seatNumber: A11
@@ -141,3 +142,8 @@ userId
 type: {email: true,  sms: false, push: true}
 message {title, msg}
 }
+
+Class UML Diagram 
+
+![movie_booking_system](https://github.com/user-attachments/assets/ec0fdc4f-f987-41c3-ad1b-dedf62d4f4c1)
+
