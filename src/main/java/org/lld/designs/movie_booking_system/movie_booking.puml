@@ -42,6 +42,7 @@ class Cinema {
 
 class Show {
     - showId
+    - movieId
     - startTime
     - endTime / duration
     + getShowTime()
@@ -112,6 +113,12 @@ class Booking {
     - tickets: list<Ticket>
 }
 
+enum BookingStatus {
+    - CONFIRMED
+    - PENDING_FOR_PAYMENT
+    - PAYMENT_FAILED
+}
+
 class Ticket {
     ticketId
     seat: Seat
@@ -171,9 +178,11 @@ Screen --> SeatArrangement
 SeatArrangement --> SeatRow
 SeatRow --> Seat
 
+Movie --> Show
 Booking --> Show
 Show --> Ticket
 Ticket --> Movie
+Ticket --> Seat
 Show --> Cinema
 
 Booking --> Payment
