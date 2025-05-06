@@ -1,0 +1,90 @@
+Low Level Design for Calendar or Meeting Scheduler
+
+Requirements
+1. User can view / create / update / delete meeting
+2. User should be able to create meeting
+    1. subject
+    2. select participants
+    3. startDateTime & endDateTime of the meeting
+    4. recurring meeting
+    5. meeting details
+    6. select meeting room / location (out of scope)
+3. System should send meeting invite to participants
+4. User should be able to RSVP (accept / reject) meeting (out of scope: tentetive / decline with new time)
+
+---------------------------------------------------------------------------------------------
+
+APIs
+POST /v1/meeting
+{
+    subject: "",
+    participantList: []
+    startDateTime
+    endDateTime
+    recurrence: {
+        recurrenceType: <DAILY/WEEKLY/MONTHLY>
+        interval: 1(once a day)
+        endDate:
+    }
+    meetingNote:
+    notifyUser: true/false
+}
+response: 201 created
+
+PUT /v1/meeting/{meetingId} {
+    subject: "",
+    participantList: []
+    startDateTime
+    endDateTime
+    recurrence: {
+        recurrenceType: <DAILY/WEEKLY/MONTHLY>
+        interval: 1(once a day)
+        endDate:
+    }
+    meetingNote:
+    notifyUser: true/false
+}
+response 200 OK or 204
+
+DELETE /v1/meeting/{meetingId} //cancel meeting
+response 200 OK or 204
+
+POST /v1/rsvp {
+    userId:
+    meetingId:
+    rsvpStatus: <ACCEPT/REJECT>
+}
+response: 201 created
+
+GET /v1/meeting/userId?=<userId>&startDate=<>&endDate=<>
+response 200
+{
+    userId:
+    dateRange: {
+        startDate:
+        endDate:
+    }
+    meetings : [
+        {
+            meetingId
+            subject: "",
+            participantList: [
+                {
+                    userId:
+                    rsvpStatus: <ACCEPTED/TENTITIVE/NOT_ACCEPTED>
+                }
+            ]
+            startDateTime
+            endDateTime
+            recurrence: {
+                recurrenceType: <DAILY/WEEKLY/MONTHLY>
+                interval: 1(once a day)
+                endDate:
+            }
+            meetingNote:
+        }
+    ]
+}
+
+
+-------------------------------------------------------------------------------

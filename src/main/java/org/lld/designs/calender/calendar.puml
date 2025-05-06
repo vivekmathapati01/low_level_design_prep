@@ -1,0 +1,100 @@
+
+@startuml
+'https://plantuml.com/use-case-diagram/salt
+
+class user {
+    - userId
+    - password
+    - email
+    - timezone
+    + updatePassword()
+    + setTimeZone()
+}
+
+class Meeting {
+    - meetingId
+    - subject
+    - organizerId
+    - description
+    - participants: List<userId>
+    - interval: Interval
+    - recurrence: Recurrence
+    + addParticipants()
+    + removeParticipants()
+}
+
+class Interval {
+    - meetingId
+    - startDateTime
+    - endDateTime
+    - timeZone
+    + setInterval()
+    + getInterval()
+}
+
+class Recurrence {
+    recurrenceId
+    meetingId
+    recurrenceType: RecurrenceType
+    interval: int
+    endDate
+}
+
+enum RecurrenceType {
+    DAILY
+    WEEKLY
+    MONTHLY
+}
+
+class Calendar {
+    calendarId:
+    userId:
+    meetings: List<Meeting>
+}
+
+class MeetingScheduler {
+    + scheduleMeeting(Meeting meeting)
+    + cancelMeeting(meetingId)
+    + sendNotification(List<User> users)
+    + addToCalendar(List<User> users)
+}
+
+class ManageMeetings {
+    - meetingId
+    - rsvpStatus: RsvpStatus
+    + rsvpMeeting(meetingId)
+    + deleteMeeting(meetingId)
+    + removeFromCalender(meetingId)
+    + updateRsvpStatus()
+}
+
+enum RsvpStatus {
+    ACCEPTED
+    REJECTED
+    TENTETIVE
+}
+
+interface Notification {
+    + sendNotification(List<userId>, Message message)
+}
+
+class EmailNotification {
+    + sendNotification(List<userId>, Message message)
+}
+
+class PushNotification {
+    + sendNotification(List<userId>, Message message)
+}
+
+Notification <-- PushNotification : extends
+Notification <-- EmailNotification : extends
+
+Interval --* Meeting
+Recurrence --* Meeting
+calendar *-- Meeting
+Meeting <|-- MeetingScheduler : create
+MeetingScheduler --|> Notification : generate
+ManageMeetings --> Calendar : update
+ManageMeetings --|> Meeting
+
+@enduml
